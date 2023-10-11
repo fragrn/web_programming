@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://cdn.bootcss.com/jquery/3.4.1/jquery.js"></script>
+    <link href="stylesheets/style.css" type="text/css" rel="stylesheet" />
+</head>
+
+<body>
+    <form>
+        <div class="input-group">
+            <label for="title_text">标题</label>
+            <input type="text" id="title_text" name="title_text">
+        </div>
+        <div class="input-group">
+            <label for="keywords_text">关键词</label>
+            <input type="text" id="keywords_text" name="keywords_text">
+        </div>
+        <div class="input-group">
+            <label for="content_text">内容</label>
+            <input type="text" id="content_text" name="content_text">
+        </div>
+        <div class="input-group">
+            <select id="sortField">
+                <option value="title">按标题排序</option>
+                <option value="url">按网址排序</option>
+                <option value="publish_date">按发布日期排序</option>
+                <option value="author">按作者排序</option>
+                <option value="keywords">按关键词排序</option>
+            </select>
+            <select id="sortOrder">
+                <option value="asc">正序</option>
+                <option value="desc">倒序</option>
+            </select>
+            <input class="form-submit" type="button" value="查询">
+        </div>
+    </form>
+    
+    <div class="links">
+        <a href="http://127.0.0.1:3000/wordcloud.html" target="_blank">关键词热度词云</a>
+        <a href="http://127.0.0.1:3000/linechart.html" target="_blank">关键词热度折线图</a>
+    </div>
+
+    <div class="cardLayout" style="margin: 10px 0px">
+        <table width="100%" id="record2"></table>
+        <div class="pagination" id="pagination"></div>
+    </div>
+    
+    <script>
+        $(document).ready(function(){
+
+            var pageSize = 9; // 每页显示的结果数量
+            var currentPage = 1; // 当前页数
+
+            $("input:button").click(function(){
+                var title = $("input:text[name='title_text']").val(); //获取输入
+                var keywords = $("input:text[name='keywords_text']").val(); //获取输入
+                var content = $("input:text[name='content_text']").val(); //获取输入
+                var sortField = $('#sortField').val(); // 获取选择的排序字段
+                var sortOrder = $('#sortOrder').val(); // 获取选择的排序方式
+                var orderBy = sortField + " " + sortOrder; // 拼接排序字段和排序方式
+                $.get('/process_get', { title: title, keywords: keywords, content: content, orderBy: orderBy }, function(data){
+                    // 计算总页数
+                    var totalPages = Math.ceil(data.length / pageSize);
+                    // 根据当前页数和每页结果数量，截取相应的结果
+                    var startIndex = (currentPage - 1) * pageSize;
+                    var endIndex = startIndex + pageSize;
+                    var pageData = data.slice(startIndex, endIndex);
+
+                    $("#record2").empty();
+                    $("#record2").append('<tr class="cardLayout"><th>url</th><th>source_name</th>'+
+                        '<th>title</th><th>keywords</th><th>author</th><th>publish_date</th></tr>');
+                    for (let list of pageData){
+                        let table = '<tr class="cardLayout"><td>';
+                        Object.values(list).forEach((element, index) => {
+                            if (index === 0) {
+                                table += '<a href="' + element + '">' + element + '</a>';
+                            } else {
+                                table += element;
+                            }
+                            table += '</td><td>';
+                        });
+                        $("#record2").append(table + '</td></tr>');
+                    }
+
+                    // 渲染分页导航
+                    renderPagination(totalPages);
+                });
+            });
+
+            // 点击分页导航链接切换页面
+            $(document).on('click', '.pagination a', function() {
+                currentPage = parseInt($(this).data('page'));
+                $("input:button").trigger('click');
+            });
+
+            // 渲染分页导航
+            function renderPagination(totalPages) {
+                var paginationHTML = '';
+                for (var i = 1; i <= totalPages; i++) {
+                    var activeClass = (i === currentPage) ? 'active' : '';
+                    paginationHTML += '<a href="#" class="' + activeClass + '" data-page="' + i + '">' + i + '</a>';
+                }
+                $('#pagination').html(paginationHTML);
+            }
+        });
+    </script>
+</body>
+</html>

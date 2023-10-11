@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>Line Chart</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+
+    h1 {
+      text-align: center;
+    }
+    div {
+      text-align: center;
+    }
+    .form-container {
+      margin-bottom: 20px;
+    }
+
+    .form-container label {
+      font-weight: bold;
+    }
+
+    .form-container input[type="text"] {
+      padding: 5px;
+      width: 200px;
+    }
+
+    .form-container button {
+      padding: 5px 10px;
+    }
+
+    #linechart {
+      width: 800px;
+      height: 600px;
+      margin: 0 auto;
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.2/dist/echarts.min.js"></script>
+</head>
+
+<body>
+  <h1>关键词频率折线图</h1>
+  <div class="form-container">
+    <label for="keyword_input">关键词：</label>
+    <input type="text" id="keyword_input">
+    <button onclick="drawLineChart()">提交</button>
+  </div>
+
+  <div id="linechart"></div>
+
+  <script>
+    function drawLineChart() {
+      var keyword = document.getElementById('keyword_input').value;
+
+      // 请求后端获取指定关键词属性的当天出现频数数据
+      fetch(`/keyword_frequency?keyword=${keyword}`)
+        .then(response => response.json())
+        .then(data => {
+          // 构建折线图数据
+          var xAxisData = data.map(item => item.date.substring(0, 10)); // 截取日期部分
+          var yAxisData = data.map(item => item.frequency);
+
+          // 初始化折线图
+          var myChart = echarts.init(document.getElementById('linechart'));
+
+          // 配置折线图选项
+          var option = {
+            xAxis: {
+              type: 'category',
+              name: '日期', // 横坐标名称
+              data: xAxisData,
+              axisLabel: {
+                rotate: 45, // 旋转角度，使刻度标签倾斜显示
+                interval: 0, // 强制显示所有刻度标签
+                formatter: function (value) {
+                  // 自定义刻度标签的显示格式为 "YYYY.MM.DD"
+                  var date = new Date(value);
+                  var year = date.getFullYear();
+                  var month = date.getMonth() + 1;
+                  var day = date.getDate();
+                  return year + '.' + month + '.' + day;
+                }
+              }
+            },
+            yAxis: {
+              type: 'value',
+              name: '当日出现频数' // 纵坐标名称
+            },
+            series: [{
+              type: 'line',
+              data: yAxisData
+            }]
+          };
+
+          // 渲染折线图
+          myChart.setOption(option);
+        })
+        .catch(error => console.log(error));
+    }
+  </script>
+</body>
+
+</html>

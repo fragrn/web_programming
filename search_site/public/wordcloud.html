@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>ECharts</title>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.2/dist/echarts.min.js"></script>
+    <script src="./javascripts/echarts-wordcloud.js"></script>
+    <!-- <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/echarts@4.7.0/dist/echarts.min.js"></script> -->
+</head>
+
+<body>
+    <div style="display: flex; justify-content: center; align-items: center; height: 100vh;">
+        <div id="wordcloud" style="width: 800px; height: 600px;"></div>
+    </div>
+
+    <script>
+        // 请求后端获取关键词数据
+        fetch('/keywords')
+            .then(response => response.json())
+            .then(data => {
+                // 构建词云图数据
+                var wordCloudData = data.map(item => ({
+                    name: item.name,
+                    value: item.value
+                }));
+                wordCloudData.sort(function(a, b) {
+                    return b.value - a.value;
+                });
+
+                // 截取前 100 个关键词
+                var limitedWordCloudData = wordCloudData.slice(0, 100);
+                // 初始化词云图
+                var myChart = echarts.init(document.getElementById('wordcloud'));
+
+                // 配置词云图选项
+                var option = {
+                    series: [{
+                        type: 'wordCloud',
+                        shape: 'circle',
+                        width: '100%',
+                        height: '100%',
+                        sizeRange: [12, 60],
+                        rotationRange: [-90, 90],
+                        rotationStep: 45,
+                        gridSize: 8,
+                        drawOutOfBound: false,
+                        textStyle: {
+                            fontFamily: 'sans-serif',
+                            fontWeight: 'bold',
+                            color: function () {
+                                return 'rgb(' +
+                                    Math.round(Math.random() * 255) +
+                                    ', ' + Math.round(Math.random() * 255) +
+                                    ', ' + Math.round(Math.random() * 255) + ')';
+                            }
+                        },
+                        data: limitedWordCloudData
+                    }]
+                };
+
+                // 渲染词云图
+                myChart.setOption(option);
+                // console.log("1111111111111111111111");
+            })
+            .catch(error => console.log(error));
+    </script>
+</body>
+
+</html>
