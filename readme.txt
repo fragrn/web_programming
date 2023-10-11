@@ -1,3 +1,9 @@
+# functions of this website
+## search engine for the news I crawled from https://news.163.com/
+## visualize the popularity of a certain keyword
+## popular words visualization
+
+### ducument notes:
 crawler里的webcrawler是爬虫代码，运行它可以爬取网易的新闻
 mysql.js里定义了对数据库进行操作的函数，来供其它代码文件使用
 search_site是express安装的脚手架，后端代码在routes/index.js中：
